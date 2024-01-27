@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,17 +22,17 @@ public class ExchangeService {
     @Autowired
     RestTemplate restTemplate;
 
-    public Map<String, Object> manipulateRate(Double actualRate){
+    public Map<String, Object> manipulateRate(Double actualRate) {
 
         Double calculatedRate = null;
         Map<String, Object> responseMap = new HashMap<>();
         try {
             Map<String, Object> response = restTemplate
                     .getForObject("https://api.currencyfreaks.com/v2.0/rates/latest?apikey=4c2ee46e55574c1f972af59e7b054616",
-                                    Map.class);
+                            Map.class);
 
             Map<String, String> ratesMap = (Map<String, String>) response.get("rates");
-            logger.info("RatesMap :: --- {}", ratesMap);
+//            logger.info("RatesMap :: --- {}", ratesMap);
             Double chosenCurrencyRateFromBase = Double.valueOf(ratesMap.get("INR"));
             logger.info("chosenCurrencyRateFromBase :: --- {}", chosenCurrencyRateFromBase);
             calculatedRate = chosenCurrencyRateFromBase * actualRate;
@@ -39,8 +40,10 @@ public class ExchangeService {
             responseMap.put("Message", "Success");
             responseMap.put("Status", HttpStatus.OK.getReasonPhrase());
             responseMap.put("Calculated Rate", calculatedRate);
-
-        }catch(Exception e ){
+            responseMap.put("Updated Date", response.get("date"));
+            logger.info("Calculated Rate ::  {}", calculatedRate);
+        } catch (Exception e) {
+            logger.error("Error occurred; Exception e", e);
             responseMap.put("Message", "Failed");
             responseMap.put("Status", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
         }
